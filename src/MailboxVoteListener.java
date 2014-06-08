@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
@@ -29,7 +30,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * @author Nikolai
  * 
  */
-public class MailboxVoteListener implements VoteListener {
+public class MailboxVoteListener implements VoteListener, Runnable {
 
     private JavaPlugin wap;
     private JavaPlugin votifier;
@@ -87,20 +88,26 @@ public class MailboxVoteListener implements VoteListener {
             
             // "INSERT INTO `WA_Items` (`playerName`, `itemId`, `qty`) VALUES (?, ?, ?)"
             pstat = connect.prepareStatement(this.query);
-
             pstat.setString(1, voter);
             pstat.setInt(2, rewardId);
             pstat.setInt(3, rewardqty);
-            pstat.executeUpdate();
+            Thread thread = new Thread(this);
+            thread.start();
             
         } catch (Exception ex) {
-
             Logger.getLogger(MailboxVoteListener.class.getName()).log(Level.SEVERE, null, ex);
-
+        } 
+    }
+    
+    @Override
+    public void run() {
+        try {
+            pstat.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(MailboxVoteListener.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             close();
         }
-
     }
 
     private void close() {
@@ -122,4 +129,5 @@ public class MailboxVoteListener implements VoteListener {
 
         }
     }
+
 }
