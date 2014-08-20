@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 
 /**
  * Solves the problem of players who vote while not logged in. <br/><br/>
@@ -32,29 +32,29 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class MailboxVoteListener implements VoteListener, Runnable {
 
-    private JavaPlugin wap;
-    private JavaPlugin votifier;
+    private final Plugin wap;
+    private final Plugin votifier;
+    
 
-    private String query;
+    private final String query;
     // INSERT INTO `WA_Items` (`playerName`, `itemId`, `qty`) VALUES (?, ?, ?)
-    private String prefix;
-    private String voter;
-    private int rewardId;
-    private int rewardqty;
+    private final String prefix;
+    private final int rewardId;
+    private final int rewardqty;
     // "jdbc:mysql://localhost:3306/WebAuctionPlus?user=root&password="
-    private String host;
-    private String port;
-    private String database;
-    private String mysqluser;
-    private String password;
-    private Connection connect = null;
-    private PreparedStatement pstat = null;
-    private ResultSet resultSet = null;
+    private final String host;
+    private final String port;
+    private final String database;
+    private final String mysqluser;
+    private final String password;
+    private Connection connect;
+    private PreparedStatement pstat;
+    private ResultSet resultSet;
     
 
     public MailboxVoteListener() {
-        this.wap = (JavaPlugin) Bukkit.getPluginManager().getPlugin("WebAuctionPlus");
-        this.votifier = (JavaPlugin) Bukkit.getPluginManager().getPlugin("Votifier");
+        this.wap = Bukkit.getPluginManager().getPlugin("WebAuctionPlus");
+        this.votifier = Bukkit.getPluginManager().getPlugin("Votifier");
         this.host = wap.getConfig().getString("MySQL.Host", "localhost");
         this.port = wap.getConfig().getString("MySQL.Port", "3306");
         this.database = wap.getConfig().getString("MySQL.Database", "WebAuctionPlus");
@@ -72,7 +72,7 @@ public class MailboxVoteListener implements VoteListener, Runnable {
     @Override
     public void voteMade(Vote vote) {
 
-        voter = vote.getUsername();
+        final String voter = vote.getUsername();
 
         try {
 
@@ -94,7 +94,9 @@ public class MailboxVoteListener implements VoteListener, Runnable {
             Thread thread = new Thread(this);
             thread.start();
             
-        } catch (Exception ex) {
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(MailboxVoteListener.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
             Logger.getLogger(MailboxVoteListener.class.getName()).log(Level.SEVERE, null, ex);
         } 
     }
@@ -123,7 +125,7 @@ public class MailboxVoteListener implements VoteListener, Runnable {
             if (connect != null) {
                 connect.close();
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
 
             Logger.getLogger(MailboxVoteListener.class.getName()).log(Level.SEVERE, null, ex);
 
